@@ -1,28 +1,47 @@
 from microbit import i2c
 from microbit import sleep
 
-# dopredna_rychlost v je float
-# rotace je uhlova rychlost omega a take float
-# Poznámka: samotná velikost čísel ještě nebude dávat smysl,
-# tzn dopredna_rychlost NENÍ v m/s, ale v nějakých nedefinovaných jednotkách…
-# tento problém odstraníme příští hodinu
+def drive(speed, rotation):
+    d = 0.08  
 
-def jed(dopredna_rychlost, rotace):
-    # TODO
-    d = 0  # tuto hodnotu si musite zmerit na robotovi, zadejte to v m
-    v_l = 0  # TODO vypocitejte dle prednasky 6
-    v_r = 0  # TODO vypocitejte dle prednasky 6
+    v_l = int(speed - d * rotation)
+    v_r = int(speed + d * rotation)
 
-    # !!!! POZOR !!!!
-    # nez zadate v_l a v_r motorum, ujistete se,
-    # ze hodnota je mezi 0-255
+    v_l = max(-255, min(255, v_l))
+    v_r = max(-255, min(255, v_r))
 
-     # TODO nastavte rychlost a smer motoru podle hodnot v_l a v_r
+    # Control the left motor
+    if v_l > 0:
+        i2c.write(0x70, b'\x03' + bytes([v_l]))
+        i2c.write(0x70, b'\x02' + bytes([0]))
+    elif v_l < 0:
+        i2c.write(0x70, b'\x02' + bytes([abs(v_l)]))
+        i2c.write(0x70, b'\x03' + bytes([0]))
+    else:
+        i2c.write(0x70, b'\x03' + bytes([0]))
+        i2c.write(0x70, b'\x02' + bytes([0]))
+
+    # Control the right motor
+    if v_r > 0:
+        i2c.write(0x70, b'\x05' + bytes([v_r]))
+        i2c.write(0x70, b'\x04' + bytes([0]))
+    elif v_r < 0:
+        i2c.write(0x70, b'\x04' + bytes([abs(v_r)]))
+        i2c.write(0x70, b'\x05' + bytes([0]))
+    else:
+        i2c.write(0x70, b'\x05' + bytes([0]))
+        i2c.write(0x70, b'\x04' + bytes([0]))
 
 if __name__ == "__main__":
+    i2c.init(freq=100000)
+    i2c.write(0x70, b"\x00\x01")
+    i2c.write(0x70, b"\xE8\xAA")
+    sleep(100)
 
-    # TODO napiste kod, aby robot jel rychlosti "135" 1s vpred
-    # pak zastavil na 1s
-    # pak rotoval okolo sve osy 1s s rychlosti "1350"  po dobu 1s
-    # a pak zastavil a kod se vypnul
+    drive(135, 0)
+    sleep(1000)
+    drive(0, 1350)
+    sleep(1000)
+    drive(0, 0)
+
 
